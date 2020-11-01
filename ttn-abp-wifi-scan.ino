@@ -14,17 +14,16 @@ uint32_t DEVADDR = 0x***REMOVED***;
 
 void setup() {
     Serial.begin(115200);
-    Serial.println(F("Starting"));
     Serial.println();
-    Serial.println("Start done millis: " + String(millis()));
+    Serial.println("Start scanning " + String(millis()));
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     WiFi.mode(WIFI_STA); // 70 ma
     WiFi.disconnect();
     int n = WiFi.scanNetworks();
     WiFi.mode( WIFI_OFF ); // 20 ma
     WiFi.forceSleepBegin();
-    delay( 1 );
-    Serial.println("Scan done millis: " + String(millis()));
+    delay(1);
+    Serial.println("Done scanning @ " + String(millis()));
     // Done scanning wifi
     pinMode(2, OUTPUT);
 
@@ -32,16 +31,16 @@ void setup() {
     // Start job
     unsigned char array_size = 4; // Calculate dynmically evuentually
     uint8_t mydata[array_size];
-    mydata[0] = 0xFF;
-    mydata[1] = 0xFF;
-    mydata[2] = 0xFF;
-    mydata[3] = 0xFF;
-    send_data_over_lora(&mydata, array_size)
+    mydata[0] = 0xAA;
+    mydata[1] = 0xBB;
+    mydata[2] = 0xCC;
+    mydata[3] = 0xDD;
+    send_data_over_lora(mydata, array_size);
+    Serial.println("Done sending custom byte buffer");
 }
 
 void loop() {
-    unsigned long now;
-    now = millis();
+    unsigned long now = millis();
     if ((now & 512) != 0) {
       digitalWrite(2, HIGH);
     }

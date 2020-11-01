@@ -62,8 +62,6 @@ void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY) {
 
   // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
   LMIC_setDrTxpow(DR_SF12, 20);
-  Serial.print("Frequency: ");
-  Serial.println(LMIC.freq);
 }
 
 void onEvent (ev_t ev) {
@@ -96,8 +94,6 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("Send in millis: " + String(millis() - beforeSend));
-            Serial.println("Total millis: " + String(millis()));
             if (LMIC.txrxFlags & TXRX_ACK)
               Serial.println(F("Received ack"));
             if (LMIC.dataLen) {
@@ -140,7 +136,7 @@ void send_data_over_lora(uint8_t* data, uint8_t data_size){
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
         // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, data, data_size - 1, 0);
+        LMIC_setTxData2(1, data, data_size, 0);
         Serial.println(F("Packet queued"));
     }
 }

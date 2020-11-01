@@ -6,6 +6,11 @@
                 "C:\\Users\\bgros\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**",
                 "C:\\Users\\bgros\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.7.1\\**"
             ],
+            "browse": {
+                "path": [
+                    "C:\\Users\\bgros\\Documents\\Arduino\\libraries"
+                ]
+            },
             "forcedInclude": [],
             "intelliSenseMode": "msvc-x64",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",

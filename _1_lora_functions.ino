@@ -1,6 +1,11 @@
+// Due to some arduino quirck, this file must contain all includes
+// Main file, ttn-abp-wifi-scan.ino
+#include "ESP8266WiFi.h"
+
+// lora_function.ino
 #include <lmic.h>
 #include <hal/hal.h>
-#include <SPI.h>
+#include <SPI.h> 
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -59,13 +64,13 @@ void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY) {
 
   // TTN uses SF9 for its RX2 window.
   LMIC.dn2Dr = DR_SF9;
-
+  // LMIC.seqnoUp = 69; // set framecounter
   // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
   LMIC_setDrTxpow(DR_SF12, 20);
 }
 
 void onEvent (ev_t ev) {
-    Serial.print(os_getTime());
+    Serial.print(millis());
     Serial.print(": ");
     switch(ev) {
         case EV_SCAN_TIMEOUT:
@@ -130,13 +135,14 @@ void onEvent (ev_t ev) {
     }
 }
 
-void send_data_over_lora(uint8_t* data, uint8_t data_size){
+void send_data_over_lora(uint8_t* data, uint8_t data_size, bool request_ack = false){
+    int ackRequest = request_ack ? 1 : 0;
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
         // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, data, data_size, 0);
+        LMIC_setTxData2(1, data, data_size, ackRequest); // (u1_t port, xref2u1_t data, u1_t dlen, u1_t confirmed), set confirmed to 1 to get an ack
         Serial.println(F("Packet queued"));
     }
 }

@@ -7,6 +7,9 @@
 #include <hal/hal.h>
 #include <SPI.h> 
 
+// persistance
+#include "rtc_memory.h"
+
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
 // DISABLE_JOIN is set in arduino-lmic/project_config/lmic_project_config.h,

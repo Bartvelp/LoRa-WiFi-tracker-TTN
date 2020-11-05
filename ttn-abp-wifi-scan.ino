@@ -5,9 +5,9 @@
 */
 
 // LoRaWAN Keys, should be in big-endian (aka msb).
-uint8_t NWKSKEY[16] = {***REMOVED***};
-uint8_t APPSKEY[16] = {***REMOVED***};
-uint32_t DEVADDR = 0x***REMOVED***;
+uint8_t NWKSKEY[16] = nwkskey;
+uint8_t APPSKEY[16] = appskey;
+uint32_t DEVADDR = devaddr;
 // DEVADDR is a 4 byte (32 bit) unsigned int, so 0xNumberInTTN, change this address for every node!
 
 void setup() {

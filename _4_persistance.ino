@@ -51,7 +51,7 @@ boolean canUplink() {
     }
   }
   // We can have max 30 seconds in 24 hours
-  return (airTimeInLast24Hours > 30)
+  return (airTimeInLast24Hours > 30);
 }
 
 boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink) {
@@ -73,20 +73,21 @@ boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean request
     // Don't do the last one, we store our new data in that one
     for (int i = 0; i < (NUM_STORED_UPLINKS - 1); i++) {
       // Get the uplink over 1 place to the right
-      nextUplinkIndex = i + 1;
+      int nextUplinkIndex = i + 1;
       Uplink nextUplink = storedData->lastUplinks[nextUplinkIndex];
       storedData->lastUplinks[i] = nextUplink; // save it in it's new place
     }
     firstFreeIndex = NUM_STORED_UPLINKS - 1; // This one is now available
   }
 
-
-  struct Uplink newUplink;
-  newUplink.bootup = storedData->bootCounter++;
-  newUplink.time = calcOnAirTime(spreadingFactor)
-  newUplink.state = getState(boolean wasActive, boolean requestedDownlink);
-  storedData->lastUplinks[firstFreeIndex] = newUplink;
-  rtcMemory.save();
+  // Build new uplink
+  Uplink newUplink;
+  newUplink.bootup = storedData->bootCounter;
+  newUplink.time = calcOnAirTime(spreadingFactor);
+  newUplink.state = getState(wasActive, requestedDownlink);
+  // save new uplink
+  storedData->lastUplinks[firstFreeIndex] = newUplink; 
+  rtcMemory.save(); // Store it in RTC memory
 }
 
 uint8_t calcOnAirTime(String spreadingFactor) {
@@ -104,10 +105,10 @@ uint8_t getState(boolean wasActive, boolean requestedDownlink) {
   // bit[7] = wasActive
   // bit[6] = requestedDownlink
   if (wasActive) {
-    if (requestedDownlink) return 0b00000011
-    else return 0b00000001
+    if (requestedDownlink) return 0b00000011;
+    else return 0b00000001;
   } else {
-    if (requestedDownlink) return 0b00000010
-    else return 0b00000000
+    if (requestedDownlink) return 0b00000010;
+    else return 0b00000000;
   }
 }

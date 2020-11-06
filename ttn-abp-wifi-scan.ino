@@ -13,8 +13,8 @@ uint32_t DEVADDR = devaddr;
 void setup() {
   Serial.begin(115200);
   Serial.println();
-  uint16_t bootCount = increaseBootCount()
-  boolean uplinkAvailable = canUplink()
+  uint16_t bootCount = increaseBootCount();
+  boolean uplinkAvailable = canUplink();
   if (!uplinkAvailable) return sleepMCU("No uplink available");
   // Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.mode(WIFI_STA); // 70 ma

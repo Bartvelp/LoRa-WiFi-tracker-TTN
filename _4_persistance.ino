@@ -15,14 +15,19 @@ typedef struct {
 RtcMemory rtcMemory("/persistance");
 
 uint16_t increaseBootCount() {
-  LittleFS.begin();
-  bool result = rtcMemory.begin();
   StoredData *storedData = rtcMemory.getData<StoredData>();
   // First increase the boot counter by one
   // Boot counter starts at 1 so we can easily find the empty entries
   if (storedData->bootCounter == 65535) storedData->bootCounter = 1;
   else storedData->bootCounter++;
   rtcMemory.save();
+  return storedData->bootCounter;
+}
+
+uint16_t mountFS() {
+  LittleFS.begin();
+  bool result = rtcMemory.begin();
+  StoredData *storedData = rtcMemory.getData<StoredData>();
   return storedData->bootCounter;
 }
 

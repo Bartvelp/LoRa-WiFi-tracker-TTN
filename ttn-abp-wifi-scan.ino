@@ -13,9 +13,13 @@ uint32_t DEVADDR = devaddr;
 void setup() {
   Serial.begin(115200);
   Serial.println();
+  uint16_t lastBootCount = mountFS();
+  if (lastBootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, save to flash
+
   // Increase bootcount
   uint16_t bootCount = increaseBootCount();
   Serial.println("#boot: " + String(bootCount));
+
   boolean uplinkAvailable = canUplink();
   if (!uplinkAvailable) return sleepMCU("No uplink available");
   // Check if we want to uplink
@@ -46,7 +50,6 @@ void setup() {
     saveNewUplink(spreadingFactor, isActive, requestAck);
     Serial.println("Saved new uplink");
   }
-  if (bootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, assuming we get here, save to flash
   printSavedState();
   sleepMCU("Done, successfully transmitted");
 }

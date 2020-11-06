@@ -13,41 +13,44 @@ uint32_t DEVADDR = devaddr;
 void setup() {
   Serial.begin(115200);
   Serial.println();
+  // Increase bootcount
   uint16_t bootCount = increaseBootCount();
+  Serial.println("#boot: " + String(bootCount));
   boolean uplinkAvailable = canUplink();
   if (!uplinkAvailable) return sleepMCU("No uplink available");
-  // Set WiFi to station mode and disconnect from an AP if it was previously connected
-  WiFi.mode(WIFI_STA); // 70 ma
-  WiFi.disconnect();
-  int numNetworksFound = WiFi.scanNetworks();
-  WiFi.mode( WIFI_OFF ); // 20 ma
-  WiFi.forceSleepBegin();
-  delay(1);
-  Serial.println("Done scanning @ " + String(millis()));
-  Serial.println(String(numNetworksFound) + " network(s) found");
-
-  // Done scanning wifi
-  if (numNetworksFound > 6) numNetworksFound = 6; 
-  // Max 6 networks for 1 + 7 * 6 = 43 bytes payload size
-  // Create an array of bytes 1 for voltage, (6 for MAC + 1 for RSSI) * numNetworksFound
+  // Check if we want to uplink
+  boolean isActive = checkActivity();
+  // No uplink if we are inactive
+  // Except every 2 hours
+  if (!isActive && (bootCount % 24 != 0)) return sleepMCU("Not active");
+  // We are going to uplink
+  // Scan surrounding wifi networks
+  int numNetworksFound = scanWiFi();
+  // Create payload
+  // Create an array of bytes, size: 1 for voltage, (6 for MAC + 1 for RSSI) * numNetworksFound
   int payload_size = 1 + 7 * numNetworksFound;
   uint8_t payload[payload_size];
   uint8_t battery_voltage = get_battery_voltage();
   generatePayload(payload, numNetworksFound, battery_voltage);
-  Serial.println("Done generating payload");
-
-  initLoraWAN(DEVADDR, NWKSKEY, APPSKEY);
-  // send_data_over_lora(mydata, array_size);
-  // Serial.println("Done queuing custom byte buffer");
+  Serial.println("Done generating payload, size: " + String(payload_size));
+  // Now determine the spreading factor we are going to use
+  String spreadingFactor = "SF10";
+  if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
+  // We could also determine to get a downlink, but we have no use for this currently
+  boolean requestAck = false;
+  initLoraWAN(DEVADDR, NWKSKEY, APPSKEY, spreadingFactor);
+  // send_data_over_lora(mydata, array_size, requestAck);
+  Serial.println("Done queuing custom byte buffer");
+  // PRETEND WE WAIT FOR TRANSMISSION HERE
+  for(int i = 0; i < 10; i++) {
+    saveNewUplink(spreadingFactor, isActive, requestAck);
+    Serial.println("Saved new uplink");
+  }
+  if (bootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, assuming we get here, save to flash
+  printSavedState();
+  sleepMCU("Done, successfully transmitted");
 }
 
 void loop() {
-    unsigned long now = millis();
-    if ((now & 512) != 0) {
-      digitalWrite(2, HIGH);
-    } else {
-      digitalWrite(2, LOW);
-    }
-      
-    os_runloop_once();
+  os_runloop_once();
 }

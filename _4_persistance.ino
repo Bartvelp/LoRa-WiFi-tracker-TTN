@@ -15,6 +15,7 @@ typedef struct {
 RtcMemory rtcMemory("/persistance");
 
 uint16_t increaseBootCount() {
+  LittleFS.begin();
   bool result = rtcMemory.begin();
   StoredData *storedData = rtcMemory.getData<StoredData>();
   // First increase the boot counter by one
@@ -25,21 +26,24 @@ uint16_t increaseBootCount() {
   return storedData->bootCounter;
 }
 
-boolean persistData() {
-  bool result = rtcMemory.begin();
-  StoredData *storedData = rtcMemory.getData<StoredData>();
-  rtcMemory.persist();
+void unmountFS() {
+  // Do this here to seperate concerns
+  LittleFS.end();
+}
+
+void persistDataToFlash() {
+  boolean success = rtcMemory.persist();
+  Serial.println("Persisted to flash: " + String(success));
 }
 
 boolean canUplink() {
   // Can uplink in terms of airtime in the past 24 hours
   // Retrieve the data from RTC memory
-  bool result = rtcMemory.begin();
   StoredData *storedData = rtcMemory.getData<StoredData>();
 
   // Now filter for the uplinks in the last 24 hours (to abide TTN policies) 
   // First count the number of uplinks older than 24 hours
-  float airTimeInLast24Hours = 0.0; // in seconds
+  int airTimeInLast24Hours = 0; // in hundreds of ms
 
   for (int i = 0; i < NUM_STORED_UPLINKS; i++) {
     Uplink currentUplink = storedData->lastUplinks[i];
@@ -47,15 +51,15 @@ boolean canUplink() {
     int bootupsInAday = 288;
     if (bootupsAgo < bootupsInAday) {
       // This is an uplink from the last 24 hours
-      airTimeInLast24Hours += currentUplink.time / 10; // convert 100's ms to s
+      airTimeInLast24Hours += currentUplink.time;
     }
   }
-  // We can have max 30 seconds in 24 hours
-  return (airTimeInLast24Hours > 30);
+  // We can have max 30 seconds in 24 hours, so return true below 30 seconds
+  Serial.println("Got airtime: " + String(airTimeInLast24Hours));
+  return (airTimeInLast24Hours < 300);
 }
 
 boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink) {
-  bool result = rtcMemory.begin();
   StoredData *storedData = rtcMemory.getData<StoredData>();
   // storedData->lastUplinks = [older, newer]
   // get the first index that is free to fill
@@ -110,5 +114,20 @@ uint8_t getState(boolean wasActive, boolean requestedDownlink) {
   } else {
     if (requestedDownlink) return 0b00000010;
     else return 0b00000000;
+  }
+}
+
+void printSavedState() {
+  // Retrieve the data from RTC memory
+  StoredData *storedData = rtcMemory.getData<StoredData>();
+  Serial.println("SavedState");
+  Serial.println("Bootcounter: " + String(storedData->bootCounter));
+
+  for (int i = 0; i < NUM_STORED_UPLINKS; i++) {
+    Uplink curUp = storedData->lastUplinks[i];
+    if (curUp.bootup == 0) continue;
+    String logString = "Uplink[" + String(i) + "] boot, uptime, state: " + String(curUp.bootup) + " ";
+    logString += String(curUp.time) + " " + String(curUp.state);
+    Serial.println(logString);
   }
 }

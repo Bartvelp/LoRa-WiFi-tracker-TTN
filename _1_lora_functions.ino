@@ -9,6 +9,7 @@
 
 // persistance
 #include "rtc_memory.h"
+#include <LittleFS.h>
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -32,7 +33,7 @@ const lmic_pinmap lmic_pins = {
             // NOTE: D3 not really usable when UART not connected
 };
 
-void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY) {
+void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String SpreadingFactor) {
   // LMIC init
   os_init();
   // Reset the MAC state. Session and pending data transfers will be discarded.
@@ -69,7 +70,17 @@ void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY) {
   LMIC.dn2Dr = DR_SF9;
   // LMIC.seqnoUp = 69; // set framecounter
   // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-  LMIC_setDrTxpow(DR_SF12, 20);
+  LMIC_setDrTxpow(getSF(SpreadingFactor), 20);
+}
+
+dr_t getSF(String SF) {
+  if (SF == "SF7") return DR_SF7;
+  if (SF == "SF8") return DR_SF8;
+  if (SF == "SF9") return DR_SF9;
+  if (SF == "SF10") return DR_SF10;
+  if (SF == "SF11") return DR_SF11;
+  if (SF == "SF12") return DR_SF12;
+
 }
 
 void onEvent (ev_t ev) {

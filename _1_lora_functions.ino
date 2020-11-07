@@ -19,9 +19,8 @@ void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 
-const unsigned TX_INTERVAL = 30;
-long int beforeSend = 0;
-
+boolean done_transmitting = false;
+boolean received_ack = false;
 // Pin mapping
 const lmic_pinmap lmic_pins = {
   .nss = 15,      // Make D8/GPIO15, is nSS on ESP8266
@@ -80,7 +79,17 @@ dr_t getSF(String SF) {
   if (SF == "SF10") return DR_SF10;
   if (SF == "SF11") return DR_SF11;
   if (SF == "SF12") return DR_SF12;
+}
 
+boolean waitForTransmit(int timeoutInMS) {
+  // Returns whether transmit was successfull, aka false at timeout
+  uint32_t startTime = millis();
+  while (millis() - startTime < timeoutInMS) {
+    os_runloop_once();
+    if (done_transmitting) return true;
+  }
+  // Since we have not returned yet, we have reaced the timeout
+  return false;
 }
 
 void onEvent (ev_t ev) {
@@ -113,15 +122,15 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
+            done_transmitting = true;
             if (LMIC.txrxFlags & TXRX_ACK)
               Serial.println(F("Received ack"));
+              received_ack = true;
             if (LMIC.dataLen) {
               Serial.println(F("Received "));
               Serial.println(LMIC.dataLen);
               Serial.println(F(" bytes of payload"));
             }
-            // Schedule next transmission
-            // os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));

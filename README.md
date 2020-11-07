@@ -66,6 +66,7 @@ typedef struct {
 ```
 
 There are about (60 / 5) * 24 = 288 boots in a day.
+With SF10 can have 30 / 0.617 = 50 uplinks in a day.
 You can have max about a 100 uplinks in a day, which need to fit in 508 - 2 = 506 bytes of memory
 506 / 100 = 5 bytes per uplink, 4 are used in the above struct, so we store the last 120 uplinks
 Then filter the array for the last 24 hours by looping through the array and finding the first uplink that is too old

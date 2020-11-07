@@ -42,18 +42,21 @@ void setup() {
   if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
   // We could also determine to get a downlink, but we have no use for this currently
   boolean requestAck = false;
+  // Init lora with the keys and SF, and queue the payload
   initLoraWAN(DEVADDR, NWKSKEY, APPSKEY, spreadingFactor);
-  // send_data_over_lora(mydata, array_size, requestAck);
+  send_data_over_lora(payload, array_size, requestAck);
   Serial.println("Done queuing custom byte buffer");
-  // PRETEND WE WAIT FOR TRANSMISSION HERE
-  for(int i = 0; i < 10; i++) {
-    saveNewUplink(spreadingFactor, isActive, requestAck);
-    Serial.println("Saved new uplink");
-  }
+  // Wait for transmission (or timeout)
+  boolean success = waitForTransmit(6000);
+  Serial.println("Succesfully transmitted: " + String(success));
+  // Save the new uplink
+  saveNewUplink(spreadingFactor, isActive, requestAck);
   printSavedState();
   sleepMCU("Done, successfully transmitted");
 }
 
 void loop() {
-  os_runloop_once();
+  // We should never get here
+  Serial.println("??? We are in the main loop ???");
+  delay(1000);
 }

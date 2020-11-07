@@ -140,8 +140,11 @@ uint8_t getState(boolean wasActive, boolean requestedDownlink) {
 void printSavedState() {
   // Retrieve the data from RTC memory
   StoredData *storedData = rtcMemory.getData<StoredData>();
-  Serial.println("SavedState");
+  Serial.println("-----------------");
+  Serial.println("SavedState:");
   Serial.println("Bootcounter: " + String(storedData->bootCounter));
+  Serial.println("uplinkCount: " + String(storedData->uplinkCount));
+  Serial.println("downlinkCount: " + String(storedData->downlinkCount));
 
   for (int i = 0; i < NUM_STORED_UPLINKS; i++) {
     Uplink curUp = storedData->lastUplinks[i];
@@ -150,4 +153,5 @@ void printSavedState() {
     logString += String(curUp.time) + " " + String(curUp.state);
     Serial.println(logString);
   }
+  Serial.println("-----------------");
 }

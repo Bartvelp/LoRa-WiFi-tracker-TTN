@@ -1,4 +1,6 @@
 boolean checkActivity() {
   // TODO implement
-  return (random(2) == 0);
+  uint8_t randomNumber = random(0, 255);
+  Serial.println("Got random num: " + String(randomNumber));
+  return (randomNumber > 127);
 }

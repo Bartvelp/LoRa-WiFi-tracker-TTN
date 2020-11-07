@@ -14,11 +14,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   uint16_t lastBootCount = mountFS();
-  if (lastBootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, save to flash
 
   // Increase bootcount
   uint16_t bootCount = increaseBootCount();
   Serial.println("#boot: " + String(bootCount));
+  if (bootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, save to flash
 
   boolean uplinkAvailable = canUplink();
   if (!uplinkAvailable) return sleepMCU("No uplink available");
@@ -55,6 +55,7 @@ void setup() {
   // Save the new uplink
   saveNewUplink(spreadingFactor, isActive, requestAck);
   printSavedState();
+  if (bootCount % 5 == 0) persistDataToFlash(); // save the uplink as well
   sleepMCU("Done, successfully transmitted");
 }
 

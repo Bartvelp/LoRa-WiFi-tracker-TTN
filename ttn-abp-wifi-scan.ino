@@ -44,7 +44,7 @@ void setup() {
   boolean requestAck = false;
   // Init lora with the keys and SF, and queue the payload
   initLoraWAN(DEVADDR, NWKSKEY, APPSKEY, spreadingFactor);
-  send_data_over_lora(payload, array_size, requestAck);
+  send_data_over_lora(payload, payload_size, requestAck);
   Serial.println("Done queuing custom byte buffer");
   // Wait for transmission (or timeout)
   boolean success = waitForTransmit(6000);

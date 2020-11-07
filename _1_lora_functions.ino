@@ -85,6 +85,7 @@ boolean waitForTransmit(int timeoutInMS) {
   uint32_t startTime = millis();
   while (millis() - startTime < timeoutInMS) {
     os_runloop_once();
+    yield();
     if (done_transmitting) return true;
   }
   // Since we have not returned yet, we have reaced the timeout

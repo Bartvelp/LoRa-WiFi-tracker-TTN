@@ -42,8 +42,11 @@ void setup() {
   if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
   // We could also determine to get a downlink, but we have no use for this currently
   boolean requestAck = false;
-  // Init lora with the keys and SF, and queue the payload
-  initLoraWAN(DEVADDR, NWKSKEY, APPSKEY, spreadingFactor);
+  // Get the stored downlink and uplink counters
+  uint32_t uplinkCount = get_uplink_count_from_memory();
+  uint32_t downlinkCount = get_downlink_count_from_memory();
+  // Init lora with the keys, SF and counters, and queue the payload
+  initLoraWAN(DEVADDR, NWKSKEY, APPSKEY, spreadingFactor, uplinkCount, downlinkCount);
   send_data_over_lora(payload, payload_size, requestAck);
   Serial.println("Done queuing custom byte buffer");
   // Wait for transmission (or timeout)

@@ -1,4 +1,4 @@
 boolean checkActivity() {
   // TODO implement
-  return (random(5) > 0);
+  return (random(3) == 0);
 }

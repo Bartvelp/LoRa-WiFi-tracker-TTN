@@ -9,6 +9,8 @@ typedef struct {
 // max 508 bytes available in RTC mem
 typedef struct {
   uint16_t bootCounter;
+  uint32_t uplinkCount;
+  uint32_t downlinkCount;
   Uplink lastUplinks[NUM_STORED_UPLINKS];
 } StoredData;
 
@@ -95,8 +97,21 @@ boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean request
   newUplink.time = calcOnAirTime(spreadingFactor);
   newUplink.state = getState(wasActive, requestedDownlink);
   // save new uplink
-  storedData->lastUplinks[firstFreeIndex] = newUplink; 
+  storedData->lastUplinks[firstFreeIndex] = newUplink;
+  // Get the uplink and downlink count from LMIC
+  storedData->uplinkCount = get_uplink_count();
+  storedData->downlinkCount = get_downlink_count();
   rtcMemory.save(); // Store it in RTC memory
+}
+
+uint32_t get_uplink_count_from_memory() {
+  StoredData *storedData = rtcMemory.getData<StoredData>();
+  return storedData->uplinkCount;
+}
+
+uint32_t get_downlink_count_from_memory() {
+  StoredData *storedData = rtcMemory.getData<StoredData>();
+  return storedData->downlinkCount;
 }
 
 uint8_t calcOnAirTime(String spreadingFactor) {

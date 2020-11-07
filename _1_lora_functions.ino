@@ -32,7 +32,7 @@ const lmic_pinmap lmic_pins = {
             // NOTE: D3 not really usable when UART not connected
 };
 
-void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String SpreadingFactor) {
+void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String SpreadingFactor, uint32_t uplinkCount, uint32_t downlinkCount) {
   // LMIC init
   os_init();
   // Reset the MAC state. Session and pending data transfers will be discarded.
@@ -67,7 +67,9 @@ void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String Sp
 
   // TTN uses SF9 for its RX2 window.
   LMIC.dn2Dr = DR_SF9;
-  // LMIC.seqnoUp = 69; // set framecounter
+  LMIC.seqnoUp = uplinkCount; // set framecounter
+  LMIC.seqnoDn = downlinkCount;
+
   // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
   LMIC_setDrTxpow(getSF(SpreadingFactor), 20);
 }
@@ -156,6 +158,13 @@ void onEvent (ev_t ev) {
             Serial.println((unsigned) ev);
             break;
     }
+}
+
+uint32_t get_uplink_count() {
+  return LMIC.seqnoUp;
+}
+uint32_t get_downlink_count() {
+  return LMIC.seqnoDn;
 }
 
 void send_data_over_lora(uint8_t* data, uint8_t data_size, bool request_ack = false){

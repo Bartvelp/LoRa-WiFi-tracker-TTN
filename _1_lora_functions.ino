@@ -23,13 +23,10 @@ boolean done_transmitting = false;
 boolean received_ack = false;
 // Pin mapping
 const lmic_pinmap lmic_pins = {
-  .nss = 15,      // Make D8/GPIO15, is nSS on ESP8266
+  .nss = 15, // Make D8/GPIO15, is nSS on ESP8266
   .rxtx = LMIC_UNUSED_PIN,      // D4/GPIO2. For placeholder only,
-            // Do not connected on RFM92/RFM95
-  .rst = 4,       // Make D0/GPIO16, Needed on RFM92/RFM95? (probably not)
-  .dio = {5, 16, LMIC_UNUSED_PIN},   // Specify pin numbers for DIO0, 1, 2
-            // D1/GPIO5,D2/GPIO4,D3/GPIO3 are usable pins on ESP8266
-            // NOTE: D3 not really usable when UART not connected
+  .rst = 4, // Make D2/GPIO4
+  .dio = {LMIC_UNUSED_PIN, LMIC_UNUSED_PIN, LMIC_UNUSED_PIN}  // Specify pin numbers for DIO0, 1, 2
 };
 
 void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String SpreadingFactor, uint32_t uplinkCount, uint32_t downlinkCount) {

@@ -63,4 +63,9 @@ void loop() {
   // We should never get here
   Serial.println("??? We are in the main loop ???");
   delay(1000);
+  // Flash onboard LED
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  delay(1000);
+  digitalWrite(2, HIGH);
 }

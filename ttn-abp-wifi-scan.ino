@@ -53,7 +53,7 @@ void setup() {
   boolean success = waitForTransmit(6000);
   Serial.println("Succesfully transmitted: " + String(success));
   // Save the new uplink
-  saveNewUplink(spreadingFactor, isActive, requestAck);
+  saveNewUplink(spreadingFactor, isActive, requestAck, payload_size);
   printSavedState();
   if (bootCount % 5 == 0) persistDataToFlash(); // save the uplink as well
   sleepMCU("Done, successfully transmitted");

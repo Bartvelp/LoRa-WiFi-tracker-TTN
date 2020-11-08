@@ -66,7 +66,7 @@ boolean canUplink() {
   return (airTimeInLast24Hours < 300);
 }
 
-boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink) {
+boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink, int payload_size) {
   StoredData *storedData = rtcMemory.getData<StoredData>();
   // storedData->lastUplinks = [older, newer]
   // get the first index that is free to fill
@@ -94,7 +94,7 @@ boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean request
   // Build new uplink
   Uplink newUplink;
   newUplink.bootup = storedData->bootCounter;
-  newUplink.time = calcOnAirTime(spreadingFactor);
+  newUplink.time = calcOnAirTime(spreadingFactor, payload_size);
   newUplink.state = getState(wasActive, requestedDownlink);
   // save new uplink
   storedData->lastUplinks[firstFreeIndex] = newUplink;
@@ -114,15 +114,20 @@ uint32_t get_downlink_count_from_memory() {
   return storedData->downlinkCount;
 }
 
-uint8_t calcOnAirTime(String spreadingFactor) {
-  // TODO, also use num bytes send
-  // In hundreds of ms
-  if (spreadingFactor == "SF7") return 1;
-  if (spreadingFactor == "SF8") return 2;
-  if (spreadingFactor == "SF9") return 4;
-  if (spreadingFactor == "SF10") return 7;
-  if (spreadingFactor == "SF11") return 14;
-  if (spreadingFactor == "SF12") return 24;
+uint8_t calcOnAirTime(String spreadingFactor, int payload_size) {
+  payload_size = payload_size + 13; // Add lorawan bytes
+  int sf = spreadingFactor.substring(2).toInt();
+  int low_data_rate = (sf >= 11) ? 1 : 0;
+
+  float ms_per_symbol = (pow(2.0, sf) / (125 * 1000)) * 1000; //ms
+  float ms_in_preamble = (8 + 4.25) * ms_per_symbol;          //ms
+
+  int step_size = ceil((8 * payload_size - 4 * sf + 28 + 16) / (4 * (sf - 2 * low_data_rate)));
+  // Unknown why but this is 1 too low;
+  step_size++;
+  int num_symbols_in_payload = 8 + max(step_size * (1 + 4), 0);
+  float ms_on_air = ms_in_preamble + (num_symbols_in_payload * ms_per_symbol);
+  return ceil(ms_on_air / 100);
 }
 
 uint8_t getState(boolean wasActive, boolean requestedDownlink) {

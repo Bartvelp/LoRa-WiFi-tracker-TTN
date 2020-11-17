@@ -1,6 +1,8 @@
 boolean checkActivity() {
-  // TODO implement
-  uint8_t randomNumber = random(0, 255);
-  Serial.println("Got random num: " + String(randomNumber));
-  return (randomNumber < 65);
+  pinMode(5, INPUT);
+  boolean isActive = digitalRead(5);
+  // Now we sink the current
+  pinMode(5, OUTPUT);
+  digitalWrite(5, LOW);
+  return isActive;
 }

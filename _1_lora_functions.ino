@@ -23,10 +23,10 @@ boolean done_transmitting = false;
 boolean received_ack = false;
 // Pin mapping
 const lmic_pinmap lmic_pins = {
-  .nss = 15, // Make D8/GPIO15, is nSS on ESP8266
+  .nss = 0, // Make D8/GPIO15, is nSS on ESP8266
   .rxtx = LMIC_UNUSED_PIN,      // D4/GPIO2. For placeholder only,
   .rst = LMIC_UNUSED_PIN, // Connect to esp8266 RST, or Make D2/GPIO4
-  .dio = {5, 4, LMIC_UNUSED_PIN},   // D1/GPIO5; D2/GPIO4, when D4 is actually connected, ESP won't boot
+  .dio = {15, 15, LMIC_UNUSED_PIN},   // D1/GPIO5; D2/GPIO4, when D4 is actually connected, ESP won't boot
 };
 
 void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String SpreadingFactor, uint32_t uplinkCount, uint32_t downlinkCount) {
@@ -61,7 +61,7 @@ void initLoraWAN(uint32_t DEVADDR, uint8_t* NWKSKEY, uint8_t* APPSKEY, String Sp
 
   // Disable link check validation
   LMIC_setLinkCheckMode(0);
-
+  LMIC_setAdrMode(false); // disable ADR downlinks, since this node is mobile
   // TTN uses SF9 for its RX2 window.
   LMIC.dn2Dr = DR_SF9;
   LMIC.seqnoUp = uplinkCount; // set framecounter
@@ -88,7 +88,7 @@ boolean waitForTransmit(int timeoutInMS) {
     yield();
     if (done_transmitting) return true;
   }
-  // Since we have not returned yet, we have reaced the timeout
+  // Since we have not returned yet, we have reached the timeout
   return false;
 }
 

@@ -43,7 +43,7 @@ void persistDataToFlash() {
   Serial.println("Persisted to flash: " + String(success));
 }
 
-boolean canUplink() {
+int getAirtime() {
   // Can uplink in terms of airtime in the past 24 hours
   // Retrieve the data from RTC memory
   StoredData *storedData = rtcMemory.getData<StoredData>();
@@ -63,7 +63,7 @@ boolean canUplink() {
   }
   // We can have max 30 seconds in 24 hours, so return true below 30 seconds
   Serial.println("Got airtime: " + String(airTimeInLast24Hours));
-  return (airTimeInLast24Hours < 300);
+  return airTimeInLast24Hours;
 }
 
 boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink, int payload_size) {

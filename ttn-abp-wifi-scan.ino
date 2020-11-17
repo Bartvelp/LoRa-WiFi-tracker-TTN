@@ -20,14 +20,19 @@ void setup() {
   Serial.println("#boot: " + String(bootCount));
   if (bootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, save to flash
 
-  boolean uplinkAvailable = canUplink();
-  if (!uplinkAvailable) return sleepMCU("No uplink available");
+  int airtime = getAirtime();
+  if (airtime > 300) return sleepMCU("No uplink available");
   // Check if we want to uplink
   boolean isActive = checkActivity();
+  Serial.println("IsActive: " + String(isActive));
+
   // No uplink if we are inactive
   // Except every 2 hours
   if (!isActive && (bootCount % 24 != 0)) return sleepMCU("Not active");
   // We are going to uplink
+  // Enable the LoRa module
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
   // Scan surrounding wifi networks
   int numNetworksFound = scanWiFi();
   // Create payload
@@ -38,7 +43,17 @@ void setup() {
   generatePayload(payload, numNetworksFound, battery_voltage);
   Serial.println("Done generating payload, size: " + String(payload_size));
   // Now determine the spreading factor we are going to use
+
   String spreadingFactor = "SF10";
+  // Do some tricks to limit SF when our uptime already is high
+  if (airtime > 100 && bootCount % 3 == 0) spreadingFactor = "SF9";
+  if (airtime > 200 && bootCount % 3 == 1) spreadingFactor = "SF8";
+  if (airtime > 250 && bootCount % 3 == 2) spreadingFactor = "SF7";
+  // When airtime is below 10.0 seconds use SF10 by default
+  // 10.0 < airtime < 20.0 = 33% SF9, 66% SF10
+  // 20.0 < airtime < 25.0 = 33% SF8, 33% SF9, 33% SF10
+  // 25.0 < airtime        = 33% SF7, 33% SF8, 33% SF9
+
   if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
   // We could also determine to get a downlink, but we have no use for this currently
   boolean requestAck = false;

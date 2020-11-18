@@ -27,8 +27,8 @@ void setup() {
   Serial.println("IsActive: " + String(isActive));
 
   // No uplink if we are inactive
-  // Except every 2 hours
-  if (!isActive && (bootCount % 24 != 0)) return sleepMCU("Not active");
+  // Except every 3 hours
+  if (!isActive && (bootCount % 36 != 0)) return sleepMCU("Not active");
   // We are going to uplink
   // Enable the LoRa module
   pinMode(2, OUTPUT);
@@ -55,6 +55,7 @@ void setup() {
   // 25.0 < airtime        = 33% SF7, 33% SF8, 33% SF9
 
   if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
+  Serial.println("Selected: " + spreadingFactor);
   // We could also determine to get a downlink, but we have no use for this currently
   boolean requestAck = false;
   // Get the stored downlink and uplink counters

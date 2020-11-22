@@ -36,19 +36,20 @@ void setup() {
   // Scan surrounding wifi networks
   int numNetworksFound = scanWiFi();
   // Create payload
-  // Create an array of bytes, size: 1 for voltage, (6 for MAC + 1 for RSSI) * numNetworksFound
-  int payload_size = 1 + 7 * numNetworksFound;
+  // Create an array of bytes, size: 1 for voltage, 2 for bootcount, (6 for MAC + 1 for RSSI) * numNetworksFound
+  int payload_size = 1 + 2 + 7 * numNetworksFound;
   uint8_t payload[payload_size];
   uint8_t battery_voltage = get_battery_voltage();
-  generatePayload(payload, numNetworksFound, battery_voltage);
+  generatePayload(payload, numNetworksFound, battery_voltage, bootCount);
   Serial.println("Done generating payload, size: " + String(payload_size));
   // Now determine the spreading factor we are going to use
 
   String spreadingFactor = "SF10";
   // Do some tricks to limit SF when our uptime already is high
+
   if (airtime > 100 && bootCount % 3 == 0) spreadingFactor = "SF9";
-  if (airtime > 200 && bootCount % 3 == 1) spreadingFactor = "SF8";
-  if (airtime > 250 && bootCount % 3 == 2) spreadingFactor = "SF7";
+  if (airtime > 150 && bootCount % 3 == 1) spreadingFactor = "SF8";
+  if (airtime > 180 && bootCount % 3 == 2) spreadingFactor = "SF7";
   // When airtime is below 10.0 seconds use SF10 by default
   // 10.0 < airtime < 20.0 = 33% SF9, 66% SF10
   // 20.0 < airtime < 25.0 = 33% SF8, 33% SF9, 33% SF10
@@ -70,7 +71,7 @@ void setup() {
   Serial.println("Succesfully transmitted: " + String(success));
   // Save the new uplink
   saveNewUplink(spreadingFactor, isActive, requestAck, payload_size);
-  printSavedState();
+  if (bootCount % 5 == 0) printSavedState();
   if (bootCount % 5 == 0) persistDataToFlash(); // save the uplink as well
   sleepMCU("Done, successfully transmitted");
 }

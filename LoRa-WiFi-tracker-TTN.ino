@@ -4,11 +4,14 @@
  * W A R N I N G
 */
 
+#include "keys.h"
+#include "libs.h"
+
+
 // LoRaWAN Keys, should be in big-endian (aka msb).
-uint8_t NWKSKEY[16] = nwkskey;
-uint8_t APPSKEY[16] = appskey;
-uint32_t DEVADDR = devaddr;
-// DEVADDR is a 4 byte (32 bit) unsigned int, so 0xNumberInTTN, change this address for every node!
+uint8_t NWKSKEY[16] = TTN_Nwkskey;
+uint8_t APPSKEY[16] = TTN_Appskey;
+uint32_t DEVADDR = TTN_devaddr;
 
 void setup() {
   Serial.begin(115200);
@@ -23,7 +26,7 @@ void setup() {
   int airtime = getAirtime();
   if (airtime > 300) return sleepMCU("No uplink available");
   // Check if we want to uplink
-  boolean isActive = checkActivity();
+  boolean isActive = true; // checkActivity();
   Serial.println("IsActive: " + String(isActive));
 
   // No uplink if we are inactive
@@ -55,7 +58,7 @@ void setup() {
   // 20.0 < airtime < 25.0 = 33% SF8, 33% SF9, 33% SF10
   // 25.0 < airtime        = 33% SF7, 33% SF8, 33% SF9
 
-  if (bootCount % 12 == 0) spreadingFactor = "SF12"; // Every hour set a high SF
+  if (bootCount % 12 == 0 || true) spreadingFactor = "SF12"; // Every hour set a high SF
   Serial.println("Selected: " + spreadingFactor);
   // We could also determine to get a downlink, but we have no use for this currently
   boolean requestAck = false;
@@ -70,7 +73,7 @@ void setup() {
   boolean success = waitForTransmit(6000);
   Serial.println("Succesfully transmitted: " + String(success));
   // Save the new uplink
-  saveNewUplink(spreadingFactor, isActive, requestAck, payload_size);
+  // saveNewUplink(spreadingFactor, isActive, requestAck, payload_size);
   if (bootCount % 5 == 0) printSavedState();
   if (bootCount % 5 == 0) persistDataToFlash(); // save the uplink as well
   sleepMCU("Done, successfully transmitted");

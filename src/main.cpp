@@ -13,16 +13,20 @@ uint8_t NWKSKEY[16] = TTN_Nwkskey;
 uint8_t APPSKEY[16] = TTN_Appskey;
 uint32_t DEVADDR = TTN_devaddr;
 
+#ifdef BART_OTA_ENABLED
+#include "BartOTA.h"
+BartOTA bartOTA;
+#endif
+
 void setup() {
   Serial.begin(74880);
   Serial.println();
-  uint16_t lastBootCount = mountFS();
+  mountFS();
 
   // Increase bootcount
   uint16_t bootCount = increaseBootCount();
   Serial.println("#boot: " + String(bootCount));
   if (bootCount % 5 == 0) persistDataToFlash(); // Every 5 boots, save to flash
-
   int airtime = getAirtime();
   if (airtime > 300) return sleepMCU("No uplink available");
   // Check if we want to uplink
@@ -38,6 +42,27 @@ void setup() {
   digitalWrite(2, LOW);
   // Scan surrounding wifi networks
   int numNetworksFound = scanWiFi();
+
+  // Check for OTA updates, if wifi is available
+  #ifdef BART_OTA_ENABLED
+  BART_OTA_APS
+  bool isKnownAPavail = false;
+  for (int i = 0; i < numNetworksFound; i++) {
+    // Check if have a known network
+    if (bartOTA.knowsAccessPoint(WiFi.SSID(i))) isKnownAPavail = true;
+  }
+  if (isKnownAPavail) {
+    // We find a known AP, try to connect for 20 seconds, to allow the user to push and OTA.
+    uint32_t startTime = millis();
+    while(millis() - startTime < 20 * 1000) {
+      bartOTA.run();
+      uint32_t interval = WiFi.status() == WL_CONNECTED ? 250 : 1000;
+      if (millis() % interval * 2 < interval) digitalWrite(2, LOW);
+      else digitalWrite(2, HIGH);
+    }
+    Serial.printf("%d ms in, Done waiting for OTA, continueing send\n", millis());
+  }
+  #endif
   // Create payload
   // Create an array of bytes, size: 1 for voltage, 2 for bootcount, (6 for MAC + 1 for RSSI) * numNetworksFound
   int payload_size = 1 + 2 + 7 * numNetworksFound;

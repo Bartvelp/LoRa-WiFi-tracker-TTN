@@ -1,6 +1,20 @@
 #include "Arduino.h"
 #include "libs.h"
 
+// scanWiFi
+#include "ESP8266WiFi.h"
+
+// persistance
+#include <RTCMemory.h>
+#include <LittleFS.h>
+
+// LoRa
+// lora_function.ino
+#include <lmic.h>
+#include <hal/hal.h>
+#include <SPI.h> 
+
+
 // Activity
 boolean checkActivity() {
   pinMode(5, INPUT);
@@ -11,8 +25,6 @@ boolean checkActivity() {
   return isActive;
 }
 
-// scanWiFi
-#include "ESP8266WiFi.h"
 
 #define MAX_NETWORKS 6
 // Max 6 networks for 1 + 7 * 6 = 43 bytes payload size
@@ -41,11 +53,8 @@ void sleepMCU(String reason) {
   ESP.deepSleep(5 * 60 * 1e6);
 }
 
-// persistance
-#include "rtc_memory.h"
-#include <LittleFS.h>
 
-#define NUM_STORED_UPLINKS 120
+#define NUM_STORED_UPLINKS 50
 
 typedef struct {
   uint16_t bootup;
@@ -61,10 +70,10 @@ typedef struct {
   Uplink lastUplinks[NUM_STORED_UPLINKS];
 } StoredData;
 
-RtcMemory rtcMemory("/persistance");
+RTCMemory<StoredData> rtcMemory("/persistance");
 
 uint16_t increaseBootCount() {
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
   // First increase the boot counter by one
   // Boot counter starts at 1 so we can easily find the empty entries
   if (storedData->bootCounter == 65535) storedData->bootCounter = 1;
@@ -75,8 +84,8 @@ uint16_t increaseBootCount() {
 
 uint16_t mountFS() {
   LittleFS.begin();
-  bool result = rtcMemory.begin();
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  bool _result = rtcMemory.begin();
+  StoredData *storedData = rtcMemory.getData();
   return storedData->bootCounter;
 }
 
@@ -93,7 +102,7 @@ void persistDataToFlash() {
 int getAirtime() {
   // Can uplink in terms of airtime in the past 24 hours
   // Retrieve the data from RTC memory
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
 
   // Now filter for the uplinks in the last 24 hours (to abide TTN policies) 
   // First count the number of uplinks older than 24 hours
@@ -114,7 +123,7 @@ int getAirtime() {
 }
 
 boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean requestedDownlink, int payload_size) {
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
   // storedData->lastUplinks = [older, newer]
   // get the first index that is free to fill
   int firstFreeIndex = -1;
@@ -149,15 +158,16 @@ boolean saveNewUplink(String spreadingFactor, boolean wasActive, boolean request
   storedData->uplinkCount = get_uplink_count();
   storedData->downlinkCount = get_downlink_count();
   rtcMemory.save(); // Store it in RTC memory
+  return true;
 }
 
 uint32_t get_uplink_count_from_memory() {
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
   return storedData->uplinkCount;
 }
 
 uint32_t get_downlink_count_from_memory() {
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
   return storedData->downlinkCount;
 }
 
@@ -191,7 +201,7 @@ uint8_t getState(boolean wasActive, boolean requestedDownlink) {
 
 void printSavedState() {
   // Retrieve the data from RTC memory
-  StoredData *storedData = rtcMemory.getData<StoredData>();
+  StoredData *storedData = rtcMemory.getData();
   Serial.println("-----------------");
   Serial.println("SavedState:");
   Serial.println("Bootcounter: " + String(storedData->bootCounter));
@@ -244,13 +254,6 @@ uint8_t get_battery_voltage() {
   Serial.println("Got batbyte: " + String(batteryByte));
   return batteryByte;
 }
-
-
-// LoRa
-// lora_function.ino
-#include <lmic.h>
-#include <hal/hal.h>
-#include <SPI.h> 
 
 
 // These callbacks are only used in over-the-air activation, so they are
@@ -320,6 +323,7 @@ dr_t getSF(String SF) {
   if (SF == "SF10") return DR_SF10;
   if (SF == "SF11") return DR_SF11;
   if (SF == "SF12") return DR_SF12;
+  return DR_SF12;
 }
 
 boolean waitForTransmit(int timeoutInMS) {
@@ -365,9 +369,10 @@ void onEvent (ev_t ev) {
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
             done_transmitting = true;
-            if (LMIC.txrxFlags & TXRX_ACK)
+            if (LMIC.txrxFlags & TXRX_ACK) {
               Serial.println(F("Received ack"));
               received_ack = true;
+            }
             if (LMIC.dataLen) {
               Serial.println(F("Received "));
               Serial.println(LMIC.dataLen);

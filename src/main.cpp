@@ -30,8 +30,8 @@ void setup() {
   Serial.println("IsActive: " + String(isActive));
 
   // No uplink if we are inactive
-  // Except every 3 hours
-  if (!isActive && (bootCount % 36 != 0)) return sleepMCU("Not active");
+  // Except every 1 hours
+  if (!isActive && (bootCount % 12 != 0)) return sleepMCU("Not active");
   // We are going to uplink
   // Enable the LoRa module
   pinMode(2, OUTPUT);

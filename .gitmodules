@@ -1,0 +1,3 @@
+[submodule "lib/BartOTA"]
+	path = lib/BartOTA
+	url = https://github.com/Bartvelp/BartOTA

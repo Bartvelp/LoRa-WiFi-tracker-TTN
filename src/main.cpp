@@ -14,7 +14,7 @@ uint8_t APPSKEY[16] = TTN_Appskey;
 uint32_t DEVADDR = TTN_devaddr;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(74880);
   Serial.println();
   uint16_t lastBootCount = mountFS();
 
@@ -26,7 +26,7 @@ void setup() {
   int airtime = getAirtime();
   if (airtime > 300) return sleepMCU("No uplink available");
   // Check if we want to uplink
-  boolean isActive = true; // checkActivity();
+  boolean isActive = false; // checkActivity();
   Serial.println("IsActive: " + String(isActive));
 
   // No uplink if we are inactive
@@ -53,6 +53,8 @@ void setup() {
   if (airtime > 100 && bootCount % 3 == 0) spreadingFactor = "SF9";
   if (airtime > 150 && bootCount % 3 == 1) spreadingFactor = "SF8";
   if (airtime > 180 && bootCount % 3 == 2) spreadingFactor = "SF7";
+  // FORCE SF12
+  spreadingFactor = "SF12";
   // When airtime is below 10.0 seconds use SF10 by default
   // 10.0 < airtime < 20.0 = 33% SF9, 66% SF10
   // 20.0 < airtime < 25.0 = 33% SF8, 33% SF9, 33% SF10

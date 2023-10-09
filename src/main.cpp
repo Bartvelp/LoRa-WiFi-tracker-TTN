@@ -35,7 +35,7 @@ void setup() {
 
   // No uplink if we are inactive
   // Except every 1 hours
-  if (!isActive && (bootCount % 12 != 0)) return sleepMCU("Not active");
+  if (!isActive && (bootCount % 1 != 0)) return sleepMCU("Not active");
   // We are going to uplink
   // Enable the LoRa module
   pinMode(2, OUTPUT);
